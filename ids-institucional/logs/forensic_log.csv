@@ -1,0 +1,2 @@
+date,time,ip,asn,country,abuse_contact,provider,raw_summary
+2026-06-05,09:20:00,185.220.101.45,AS0000,N/D,abuse@example.org,Proveedor simulado,Registro de ejemplo para futura consulta WHOIS/Abuse.

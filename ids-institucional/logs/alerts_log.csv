@@ -1,0 +1,3 @@
+date,time,severity,src_ip,src_mac,dst_ip,risk_type,message,status
+2026-06-05,09:15:00,Critica,192.168.1.90,DE:AD:BE:EF:00:10,185.220.101.45,IP en blacklist,Conexion simulada hacia IP peligrosa,Nueva
+2026-06-05,09:17:30,Media,192.168.1.41,AA:BB:CC:00:00:41,203.0.113.66,Scanner remoto,Intento simulado de conexion con indicador de riesgo,En revision

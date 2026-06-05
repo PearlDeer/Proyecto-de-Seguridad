@@ -1,0 +1,7 @@
+{
+  "admin_email": "seguridad@example.org",
+  "capture_interface": "eth0",
+  "monitoring_enabled": false,
+  "dns_logging_enabled": true,
+  "threat_intel_enabled": true
+}

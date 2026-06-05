@@ -1,0 +1,5 @@
+PyQt6
+scapy
+python-dotenv
+requests
+python-whois

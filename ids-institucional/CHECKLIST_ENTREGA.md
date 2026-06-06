@@ -1,0 +1,39 @@
+# Checklist de Entrega - IDS Institucional
+
+- [ ] La app abre correctamente en Debian.
+- [ ] README actualizado.
+- [ ] Manual de usuario actualizado.
+- [ ] `requirements.txt` revisado.
+- [ ] `.env.example` revisado.
+- [ ] Correo administrador por defecto configurado: `al281268@edu.uaa.mx`.
+- [ ] No hay contrasenas reales.
+- [ ] No hay API keys reales.
+- [ ] No hay tokens reales.
+- [ ] No hay SQL.
+- [ ] No hay SQLite.
+- [ ] `.env` esta en `.gitignore`.
+- [ ] JSON funciona.
+- [ ] CSV funciona.
+- [ ] `whitelist.json` carga aunque este vacio.
+- [ ] JSON corrupto genera respaldo `.bak`.
+- [ ] CSV faltante se crea con encabezado.
+- [ ] Whitelist agrega equipos.
+- [ ] Whitelist edita equipos.
+- [ ] Whitelist elimina equipos.
+- [ ] Whitelist rechaza IP/MAC invalidas.
+- [ ] Whitelist rechaza duplicados.
+- [ ] DNS simulado funciona.
+- [ ] DNS real documentado con `sudo venv/bin/python main.py`.
+- [ ] Alertas funcionan.
+- [ ] SMTP simulado funciona con `SMTP_ENABLED=false`.
+- [ ] SMTP real esta documentado con `SMTP_ENABLED=true`.
+- [ ] Threat Intelligence carga blacklist.
+- [ ] Threat Intelligence agrega, edita y elimina IPs.
+- [ ] IP peligrosa genera alerta `EMERGENCY`.
+- [ ] WHOIS funciona o falla controladamente.
+- [ ] Modo demo funciona.
+- [ ] Dashboard actualiza datos.
+- [ ] Interfaz no se congela al iniciar monitoreo.
+- [ ] Errores importantes se muestran al usuario.
+- [ ] Errores tecnicos se registran en `logs/system_events.csv`.
+- [ ] Proyecto listo para presentacion presencial.

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.core.alert_manager import AlertManager
 from app.core.dns_monitor import DNSMonitor
+from app.core.log_manager import LogManager
 from app.core.threat_intel import ThreatIntelService
 from app.core.whitelist_manager import WhitelistManager
 
@@ -44,6 +45,7 @@ class PacketSniffer:
         self.whitelist = WhitelistManager(base_path) if base_path else None
         self.threat_intel = ThreatIntelService(base_path) if base_path else None
         self.alert_manager = AlertManager(base_path) if base_path else None
+        self.log_manager = LogManager(base_path) if base_path else None
         self.enabled = False
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
@@ -118,6 +120,8 @@ class PacketSniffer:
 
     def _notify_error(self, message: str) -> None:
         self.enabled = False
+        if self.log_manager:
+            self.log_manager.log_system_event("CAPTURE_ERROR", "SNIFFER", message)
         if self.error_callback:
             self.error_callback(message)
 

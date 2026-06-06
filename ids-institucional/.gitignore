@@ -3,3 +3,8 @@ __pycache__/
 *.py[cod]
 venv/
 .venv/
+.DS_Store
+logs/*.bak
+logs/*.csv.*.bak
+data/*.bak
+data/*.json.*.bak

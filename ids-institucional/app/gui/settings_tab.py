@@ -42,7 +42,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app.core.alert_manager import AlertManager
-from app.utils.config_loader import read_json, write_json
+from app.utils.config_loader import ADMIN_EMAIL_DEFAULT, read_json, write_json
 from app.utils.network_utils import list_network_interfaces
 
 
@@ -110,7 +110,7 @@ class SettingsTab(QWidget):
         hint.setObjectName("Muted")
         hint.setWordWrap(True)
         self.admin_email = QLineEdit()
-        self.admin_email.setPlaceholderText("admin@institucion.mx")
+        self.admin_email.setPlaceholderText(ADMIN_EMAIL_DEFAULT)
         form.addRow(title)
         form.addRow(hint)
         form.addRow("ADMIN_EMAIL", self.admin_email)
@@ -152,10 +152,10 @@ class SettingsTab(QWidget):
         self.smtp_password = QLineEdit()
         self.smtp_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.smtp_from = QLineEdit()
-        self.smtp_host.setPlaceholderText("smtp.gmail.com")
-        self.smtp_user.setPlaceholderText("correo_admin@example.com")
+        self.smtp_host.setPlaceholderText("smtp.office365.com")
+        self.smtp_user.setPlaceholderText(ADMIN_EMAIL_DEFAULT)
         self.smtp_password.setPlaceholderText("Contrasena de aplicacion")
-        self.smtp_from.setPlaceholderText("ids@example.com")
+        self.smtp_from.setPlaceholderText(ADMIN_EMAIL_DEFAULT)
         form.addRow(title)
         form.addRow("Estado", self.smtp_status_label)
         form.addRow("SMTP_ENABLED", self.smtp_enabled)
@@ -193,14 +193,14 @@ class SettingsTab(QWidget):
         self.settings = read_json(self.path, {})
         self.env_values = dotenv_values(self.env_path) if self.env_path.exists() else {}
 
-        self.admin_email.setText(str(self.env_values.get("ADMIN_EMAIL") or self.settings.get("admin_email", "")))
+        self.admin_email.setText(str(self.env_values.get("ADMIN_EMAIL") or self.settings.get("admin_email", ADMIN_EMAIL_DEFAULT)))
         self.smtp_enabled.setChecked(self._bool_value(self.env_values.get("SMTP_ENABLED"), bool(self.settings.get("smtp_enabled", False))))
         self.smtp_starttls.setChecked(self._bool_value(self.env_values.get("SMTP_STARTTLS"), True))
-        self.smtp_host.setText(str(self.env_values.get("SMTP_HOST") or "smtp.gmail.com"))
+        self.smtp_host.setText(str(self.env_values.get("SMTP_HOST") or "smtp.office365.com"))
         self.smtp_port.setValue(self._int_value(self.env_values.get("SMTP_PORT"), 587))
-        self.smtp_user.setText(str(self.env_values.get("SMTP_USER") or ""))
+        self.smtp_user.setText(str(self.env_values.get("SMTP_USER") or ADMIN_EMAIL_DEFAULT))
         self.smtp_password.setText(str(self.env_values.get("SMTP_PASSWORD") or ""))
-        self.smtp_from.setText(str(self.env_values.get("SMTP_FROM") or ""))
+        self.smtp_from.setText(str(self.env_values.get("SMTP_FROM") or ADMIN_EMAIL_DEFAULT))
         self.cooldown.setValue(int(self.settings.get("alert_cooldown_seconds", self._int_value(self.env_values.get("ALERT_COOLDOWN_SECONDS"), 300))))
 
         self.capture_interface.clear()
@@ -248,7 +248,23 @@ class SettingsTab(QWidget):
         if self.env_example_path.exists():
             self.env_path.write_text(self.env_example_path.read_text(encoding="utf-8"), encoding="utf-8")
         else:
-            self.env_path.write_text("SMTP_ENABLED=false\nALERT_COOLDOWN_SECONDS=300\n", encoding="utf-8")
+            self.env_path.write_text(
+                "\n".join(
+                    [
+                        "SMTP_ENABLED=false",
+                        "SMTP_HOST=smtp.office365.com",
+                        "SMTP_PORT=587",
+                        "SMTP_STARTTLS=true",
+                        f"SMTP_USER={ADMIN_EMAIL_DEFAULT}",
+                        "SMTP_PASSWORD=colocar_password_o_app_password_aqui",
+                        f"SMTP_FROM={ADMIN_EMAIL_DEFAULT}",
+                        f"ADMIN_EMAIL={ADMIN_EMAIL_DEFAULT}",
+                        "ALERT_COOLDOWN_SECONDS=300",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
         self.reload()
         QMessageBox.information(self, "Variables de entorno", ".env creado desde plantilla. Complete los valores reales antes de habilitar SMTP.")
 

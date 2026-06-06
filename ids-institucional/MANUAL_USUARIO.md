@@ -1,513 +1,343 @@
-# Manual de Usuario - IDS Institucional
+# IDS Institucional - Manual de Usuario
 
-Este manual explica como usar el IDS Institucional desde la interfaz grafica. Esta pensado para una demostracion presencial, operacion basica en Debian Linux y administracion de los modulos principales sin tocar codigo.
+Sistema operativo recomendado: Debian Linux  
+Version del sistema: entrega academica final  
+Correo administrador por defecto: `al281268@edu.uaa.mx`
 
-## 1. Inicio rapido
+## Introduccion
 
-### Abrir la aplicacion sin captura real
+IDS Institucional es una aplicacion de monitoreo defensivo. Permite registrar equipos autorizados, observar consultas DNS, detectar equipos desconocidos, identificar conexiones hacia IPs peligrosas, generar alertas y guardar evidencia en archivos CSV.
 
-Use este modo para revisar la interfaz, usar el modo demo o configurar el sistema:
+El sistema esta pensado para redes autorizadas y fines academicos. No debe usarse en redes ajenas.
+
+## Requisitos
+
+- Debian Linux.
+- Python 3.
+- Entorno virtual `venv`.
+- `libpcap-dev`.
+- `tcpdump`.
+- `whois`.
+- `openssl`.
+- Acceso a red.
+- Permisos de administrador para captura real.
+- Cuenta SMTP si se desean correos reales.
+
+## Instalacion
+
+Abra una terminal dentro de la carpeta del proyecto y ejecute:
 
 ```bash
-cd ids-institucional
+sudo apt update
+sudo apt install python3 python3-pip python3-venv libpcap-dev tcpdump whois openssl -y
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 python main.py
 ```
 
-### Abrir con captura real de red
-
-Use este modo para que Scapy pueda capturar paquetes reales:
+Para captura real de paquetes:
 
 ```bash
-cd ids-institucional
 sudo venv/bin/python main.py
 ```
 
-Si aparecen mensajes de DBus/GNOME en terminal al usar `sudo`, no son errores del IDS. Son avisos graficos de Qt bajo privilegios elevados.
+## Configuracion inicial
 
-## 2. Conceptos basicos
+Al iniciar, la aplicacion crea automaticamente:
 
-| Concepto | Significado |
-| --- | --- |
-| IDS | Sistema de deteccion de intrusos. Observa actividad y genera alertas. |
-| Whitelist | Lista de equipos autorizados por IP y MAC. |
-| DNS | Servicio que traduce dominios a IPs. Permite observar dominios consultados. |
-| Blacklist | Lista local de IPs peligrosas. |
-| Alerta | Evento de seguridad guardado en CSV y mostrado en interfaz. |
-| WHOIS | Consulta publica para obtener datos de una IP o red. |
-| Abuse Contact | Correo/contacto para reportar actividad maliciosa. |
-| `.env` | Archivo local de credenciales SMTP y variables sensibles. |
+- `data/whitelist.json`
+- `data/blacklist_ips.json`
+- `data/settings.json`
+- `logs/traffic_log.csv`
+- `logs/alerts_log.csv`
+- `logs/forensic_log.csv`
+- `logs/system_events.csv`
 
-## 3. Flujo general de uso
+Si un archivo falta, se crea. Si un JSON esta corrupto, se respalda con extension `.bak` y se regenera.
+
+## Configuracion de correo
+
+El correo administrador predeterminado es:
 
 ```text
-1. Configurar interfaz y correo
-        |
-        v
-2. Registrar equipos autorizados en Lista Blanca
-        |
-        v
-3. Cargar IPs peligrosas en Threat Intelligence
-        |
-        v
-4. Iniciar monitoreo DNS/Sitios
-        |
-        v
-5. Revisar Dashboard y Alertas
-        |
-        v
-6. Consultar WHOIS/Abuse si hay IP peligrosa
-        |
-        v
-7. Marcar alertas como revisadas y conservar CSV
+al281268@edu.uaa.mx
 ```
 
-## 4. Dashboard
+Puede cambiarse en:
 
-### Proposito
+- Pestana Configuracion.
+- Variable `ADMIN_EMAIL` del archivo `.env`.
+- Campo `admin_email` de `data/settings.json`.
 
-El Dashboard muestra una vista general del estado operativo del IDS. Sirve para presentar rapidamente si el monitoreo esta activo, cuantos dominios se han registrado, cuantas alertas existen y cual fue el ultimo evento importante.
+Para crear `.env`, use la pestana Configuracion o copie `.env.example`.
 
-### Elementos visibles
+Plantilla recomendada:
 
-| Elemento | Que muestra |
-| --- | --- |
-| Estado general del IDS | Activo, detenido o error. |
-| Interfaz de red activa | Interfaz seleccionada para captura. |
-| Equipos autorizados | Total de registros en whitelist. |
-| Eventos DNS registrados | Total de dominios en `traffic_log.csv`. |
-| Alertas totales | Total de eventos en `alerts_log.csv`. |
-| Alertas criticas | Alertas `CRITICAL` y `EMERGENCY`. |
-| IPs peligrosas cargadas | Total de indicadores en blacklist. |
-| Eventos por minuto | Actividad reciente en ventana de 60 segundos. |
-| Ultimo dominio detectado | Dominio DNS mas reciente. |
-| Ultima alerta | Riesgo mas reciente. |
-| Ultimo evento forense | Ultima IP consultada por WHOIS. |
-| Timeline | Eventos recientes DNS, alertas y WHOIS. |
+```env
+SMTP_ENABLED=false
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_STARTTLS=true
+SMTP_USER=al281268@edu.uaa.mx
+SMTP_PASSWORD=colocar_password_o_app_password_aqui
+SMTP_FROM=al281268@edu.uaa.mx
+ADMIN_EMAIL=al281268@edu.uaa.mx
+ALERT_COOLDOWN_SECONDS=300
+```
 
-### Como usarlo
+`SMTP_ENABLED=false` significa modo simulado: no envia correo real. `SMTP_ENABLED=true` intenta enviar correo real. Nunca comparta `.env` ni lo suba a GitHub.
 
-1. Abra la pestana `Dashboard`.
-2. Verifique el estado superior.
-3. Revise tarjetas y timeline.
-4. Si algo no actualiza, cambie de pestana y vuelva o use botones de recarga en las pestanas especificas.
+Si se usa Microsoft 365 institucional, puede requerirse SMTP AUTH, permiso del administrador, contrasena de aplicacion si la organizacion lo permite y revision de seguridad. Si falla el correo, el IDS sigue funcionando y registra el error.
 
-## 5. Lista Blanca
+## Ejecucion
 
-### Proposito
+Para revisar la interfaz o usar demo:
 
-La Lista Blanca define que equipos son reconocidos como autorizados. El IDS usa IP y MAC para decidir si un paquete viene de un equipo conocido o de un dispositivo sospechoso.
+```bash
+source venv/bin/activate
+python main.py
+```
 
-### Campos
-
-| Campo | Descripcion | Ejemplo |
-| --- | --- | --- |
-| Nombre del equipo | Nombre claro del activo. | Equipo Administracion |
-| Direccion IP | IP del equipo autorizado. | 192.168.1.25 |
-| Direccion MAC | MAC de la interfaz. | AA:BB:CC:DD:EE:01 |
-| Descripcion | Area, responsable o proposito. | Estacion administrativa |
-
-### Botones
-
-| Boton | Que hace |
-| --- | --- |
-| Agregar equipo | Guarda un nuevo equipo en `data/whitelist.json`. |
-| Editar seleccionado | Actualiza el equipo elegido en la tabla. |
-| Eliminar seleccionado | Elimina el equipo elegido. |
-| Limpiar formulario | Borra campos y seleccion. |
-| Recargar lista | Lee nuevamente `whitelist.json`. |
-
-### Como agregar un equipo
-
-1. Abra `Lista Blanca`.
-2. Complete nombre, IP, MAC y descripcion.
-3. Presione `Agregar equipo`.
-4. Revise que aparezca en la tabla.
-5. El cambio queda guardado en `data/whitelist.json`.
-
-### Que pasa si cambia algo
-
-| Cambio | Efecto |
-| --- | --- |
-| Agregar equipo | El IDS lo tratara como autorizado si IP y MAC coinciden. |
-| Editar IP | Se actualiza el criterio de autorizacion. |
-| Editar MAC | Se actualiza el criterio de Capa 2. |
-| Eliminar equipo | El trafico de ese equipo puede generar alertas. |
-
-### Reglas de autorizacion
-
-| Resultado | Significado |
-| --- | --- |
-| `AUTHORIZED` | IP y MAC coinciden con el mismo registro. |
-| `UNKNOWN_DEVICE` | No existe IP ni MAC. |
-| `UNKNOWN_IP` | La MAC existe, pero usa otra IP. |
-| `UNKNOWN_MAC` | La IP existe, pero la MAC no coincide. |
-
-## 6. Trafico DNS/Sitios
-
-### Proposito
-
-Esta pestana muestra dominios consultados en tiempo real. Permite iniciar y detener el monitoreo, elegir interfaz, recargar CSV, limpiar la vista y generar eventos de prueba.
-
-### Controles
-
-| Control | Funcion |
-| --- | --- |
-| Interfaz | Selecciona tarjeta de red, por ejemplo `wlp0s20f3`, `eth0`, `enp0s3`. |
-| Iniciar monitoreo | Arranca Scapy en un hilo separado. |
-| Detener monitoreo | Detiene la captura. |
-| Recargar CSV | Lee `logs/traffic_log.csv`. |
-| Limpiar vista | Limpia la tabla visible, no borra el CSV. |
-| Generar evento de prueba | Inserta un DNS falso en tabla y CSV. |
-
-### Tabla
-
-| Columna | Significado |
-| --- | --- |
-| Hora | Hora del evento DNS. |
-| IP origen | Equipo que hizo la consulta. |
-| MAC origen | MAC detectada si esta disponible. |
-| Dominio | Dominio consultado. |
-| Protocolo | Normalmente `DNS`. |
-| Evento | Tipo de evento, por ejemplo `DNS_QUERY`. |
-
-### Monitoreo real
-
-Para capturar trafico real:
+Para monitoreo real:
 
 ```bash
 sudo venv/bin/python main.py
 ```
 
-Luego:
+## Ventana principal
 
-1. Abra `Trafico DNS/Sitios`.
-2. Seleccione interfaz correcta.
-3. Presione `Iniciar monitoreo`.
-4. Navegue o genere trafico DNS en la red.
-5. Revise tabla y Dashboard.
+La aplicacion tiene navegacion lateral:
 
-### Modo demo
+- Dashboard.
+- Lista Blanca.
+- Trafico DNS/Sitios.
+- Alertas.
+- Threat Intelligence.
+- Configuracion.
 
-Si no hay trafico real, presione `Generar evento de prueba`. Esto guarda:
+## Dashboard
 
-| Campo | Valor demo |
-| --- | --- |
-| IP origen | 192.168.1.50 |
-| MAC origen | AA:BB:CC:DD:EE:FF |
-| Dominio | ejemplo-institucional.local |
-| Protocolo | DNS |
-| Evento | DNS_QUERY |
+Muestra el estado general del IDS:
 
-## 7. Alertas
+- Captura activa, detenida o en error.
+- Total de eventos DNS.
+- Equipos autorizados.
+- Alertas totales.
+- Alertas criticas y de emergencia.
+- IPs peligrosas cargadas.
+- Eventos por minuto.
+- Actividad reciente y timeline.
 
-### Proposito
+Si el estado indica error, revise `logs/system_events.csv`.
 
-La pestana Alertas centraliza eventos de seguridad. Muestra severidad, origen, destino, riesgo, estado y detalle forense cuando aplica.
+## Lista Blanca
 
-### Tarjetas superiores
+La lista blanca contiene equipos autorizados por IP y MAC.
 
-| Tarjeta | Muestra |
-| --- | --- |
-| Total de alertas | Total en `alerts_log.csv`. |
-| Criticas | Total `CRITICAL`. |
-| Emergencias | Total `EMERGENCY`. |
-| Ultima alerta | Riesgo mas reciente. |
+Para agregar:
 
-### Botones
+1. Abra Lista Blanca.
+2. Escriba nombre del equipo.
+3. Escriba IP, por ejemplo `192.168.1.25`.
+4. Escriba MAC, por ejemplo `AA:BB:CC:DD:EE:01`.
+5. Agregue descripcion.
+6. Pulse Agregar equipo.
 
-| Boton | Funcion |
-| --- | --- |
-| Recargar alertas | Lee `alerts_log.csv`. |
-| Limpiar vista | Limpia la tabla visible, no borra CSV. |
-| Marcar como revisada | Cambia estado de la alerta seleccionada. |
-| Consultar WHOIS nuevamente | Ejecuta WHOIS sobre la IP destino seleccionada. |
-| Generar alerta equipo no autorizado | Crea alerta demo `CRITICAL`. |
-| Generar alerta IP peligrosa | Crea alerta demo `EMERGENCY` y consulta WHOIS. |
-
-### Severidades
-
-| Severidad | Interpretacion |
-| --- | --- |
-| `INFO` | Informativo o prueba. |
-| `WARNING` | Anomalia moderada. |
-| `CRITICAL` | Riesgo importante, por ejemplo equipo no autorizado. |
-| `EMERGENCY` | Riesgo maximo, por ejemplo IP peligrosa. |
-
-### Detalle de alerta
-
-Al seleccionar una alerta se muestra:
-
-- Informacion general.
-- IP y MAC origen.
-- IP destino.
-- Severidad.
-- Estado.
-- WHOIS/Abuse si existe.
-- Recomendacion operativa.
-
-### Como revisar una alerta
+Para editar:
 
 1. Seleccione una fila.
-2. Lea el panel de detalle.
-3. Si hay IP destino, presione `Consultar WHOIS nuevamente`.
-4. Tome accion operativa.
-5. Presione `Marcar como revisada`.
+2. Modifique campos.
+3. Pulse Editar seleccionado.
 
-## 8. Threat Intelligence Local
+Para eliminar:
 
-### Proposito
+1. Seleccione una fila.
+2. Pulse Eliminar seleccionado.
 
-Administra una blacklist local de IPs peligrosas. Si el IDS ve trafico hacia una IP de esta lista, genera alerta `EMERGENCY`.
+El sistema no acepta nombre vacio, IP invalida, MAC invalida, IP duplicada ni MAC duplicada.
 
-### Campos
+## Trafico DNS/Sitios
 
-| Campo | Uso |
-| --- | --- |
-| IP | IP peligrosa externa. |
-| Tipo de riesgo | Botnet, Malware, Scanner, TOR, etc. |
-| Severidad | EMERGENCY, CRITICAL, WARNING o INFO. |
-| Fuente | Origen del indicador. |
-| Descripcion | Contexto del riesgo. |
+Esta pestana registra dominios consultados por DNS.
 
-### Botones
+Para monitoreo real:
 
-| Boton | Funcion |
-| --- | --- |
-| Agregar IP | Agrega indicador a `blacklist_ips.json`. |
-| Editar seleccionada | Actualiza indicador elegido. |
-| Eliminar seleccionada | Borra indicador elegido. |
-| Probar IP | Busca una IP en la blacklist local. |
-| Consultar WHOIS de IP seleccionada | Ejecuta WHOIS y muestra resultado. |
-| Generar alerta de prueba con esta IP | Crea alerta EMERGENCY con la IP seleccionada. |
-| Recargar blacklist | Lee de nuevo el JSON. |
+1. Ejecute con `sudo venv/bin/python main.py`.
+2. Seleccione interfaz.
+3. Pulse Iniciar monitoreo.
+4. Genere trafico DNS:
 
-### Como agregar una IP peligrosa
-
-1. Abra `Threat Intelligence`.
-2. Complete IP, riesgo, severidad, fuente y descripcion.
-3. Presione `Agregar IP`.
-4. Verifique que aparezca en la tabla.
-
-### Como probar una IP
-
-1. Seleccione o escriba una IP.
-2. Presione `Probar IP`.
-3. El sistema indica si aparece en la blacklist local.
-
-### Como consultar WHOIS
-
-1. Seleccione una IP.
-2. Presione `Consultar WHOIS de IP seleccionada`.
-3. Revise el panel `Resultado WHOIS`.
-4. El resultado se guarda en `logs/forensic_log.csv`.
-
-## 9. Configuracion
-
-### Proposito
-
-Esta pestana centraliza parametros de operacion: interfaz de red, cooldown, correo administrador, SMTP y creacion de `.env`.
-
-### Secciones
-
-| Seccion | Contenido |
-| --- | --- |
-| Correo del administrador | ADMIN_EMAIL destino de alertas. |
-| Captura de red | Interfaz activa y cooldown. |
-| Servidor SMTP | Host, puerto, STARTTLS, usuario, password y remitente. |
-| Variables de entorno y ejecucion | Estado de `.env` y comando recomendado. |
-
-### Configurar correo SMTP
-
-1. Abra `Configuracion`.
-2. Si no existe `.env`, presione `Crear .env desde plantilla`.
-3. Escriba el correo administrador.
-4. Active `Enviar correos reales si .env esta completo` solo cuando tenga credenciales listas.
-5. Configure:
-   - `SMTP_HOST`
-   - `SMTP_PORT`
-   - `SMTP_USER`
-   - `SMTP_PASSWORD`
-   - `SMTP_FROM`
-   - `SMTP_STARTTLS`
-6. Presione `Guardar configuracion`.
-7. Presione `Probar correo`.
-
-### Configuracion Gmail recomendada
-
-| Variable | Valor tipico |
-| --- | --- |
-| SMTP_ENABLED | true |
-| SMTP_HOST | smtp.gmail.com |
-| SMTP_PORT | 587 |
-| SMTP_STARTTLS | true |
-| SMTP_USER | correo_admin@gmail.com |
-| SMTP_PASSWORD | Contrasena de aplicacion |
-| SMTP_FROM | ids@institucion.mx |
-| ADMIN_EMAIL | administrador@institucion.mx |
-
-Gmail requiere una contrasena de aplicacion, no la contrasena normal de la cuenta.
-
-### Modo simulado
-
-Si `SMTP_ENABLED=false`, el IDS no envia correo real. Aun asi:
-
-- Genera alerta.
-- Guarda CSV.
-- Actualiza Dashboard.
-- Marca estado como `Correo: Simulado`.
-
-### Cooldown
-
-El cooldown evita muchas alertas/correos repetidos del mismo tipo en poco tiempo.
-
-| Valor | Efecto |
-| --- | --- |
-| 0 | Sin espera. Util solo para pruebas controladas. |
-| 300 | Recomendado: 5 minutos. |
-| 600 o mas | Reduce ruido en redes con mucho trafico. |
-
-## 10. Correo de alertas
-
-### Cuando se envia
-
-El correo se intenta enviar si:
-
-1. SMTP esta habilitado.
-2. `.env` contiene valores completos.
-3. No aplica cooldown.
-4. El proveedor SMTP acepta conexion y autenticacion.
-
-### Correo por equipo no autorizado
-
-Incluye:
-
-- Fecha y hora.
-- IP origen.
-- MAC origen.
-- Motivo.
-- Severidad.
-- Mensaje.
-- Recomendacion de verificar si pertenece a la organizacion.
-
-### Correo por IP peligrosa
-
-Incluye:
-
-- Encabezado de emergencia.
-- IP/MAC origen.
-- IP destino peligrosa.
-- Tipo de riesgo.
-- Severidad.
-- Fuente y descripcion.
-- ASN, pais, proveedor y abuse contact si WHOIS lo entrega.
-- Recomendacion de bloqueo y revision.
-
-## 11. Archivos generados
-
-| Archivo | Cuando cambia |
-| --- | --- |
-| `data/whitelist.json` | Al agregar, editar o eliminar equipos. |
-| `data/blacklist_ips.json` | Al administrar IPs peligrosas. |
-| `data/settings.json` | Al guardar configuracion no sensible. |
-| `.env` | Al crear o guardar variables sensibles desde Configuracion. |
-| `logs/traffic_log.csv` | Al detectar DNS o generar evento demo. |
-| `logs/alerts_log.csv` | Al generar alertas reales o demo. |
-| `logs/forensic_log.csv` | Al consultar WHOIS. |
-| `logs/system_events.csv` | Al registrar cambios administrativos o errores relevantes. |
-
-## 12. Diagramas operativos
-
-### Alerta por equipo no autorizado
-
-```text
-Paquete de red
-   |
-   v
-IP/MAC origen
-   |
-   v
-Whitelist
-   |
-   +-- Coincide -> sin alerta
-   |
-   +-- No coincide -> alerta CRITICAL
-                     |
-                     v
-                 alerts_log.csv
-                     |
-                     v
-                 Alertas + Dashboard
+```bash
+nslookup debian.org
+nslookup python.org
 ```
 
-### Alerta por IP peligrosa
+5. Verifique la tabla y `logs/traffic_log.csv`.
+6. Pulse Detener monitoreo al finalizar.
 
-```text
-Paquete con destino externo
-   |
-   v
-Blacklist local
-   |
-   +-- No aparece -> sin alerta
-   |
-   +-- Aparece -> EMERGENCY
-                  |
-                  v
-              WHOIS/Abuse
-                  |
-                  v
-         alerts_log.csv + forensic_log.csv
-                  |
-                  v
-         Correo real o simulado + Dashboard
+Para demo, pulse Generar evento de prueba.
+
+## Alertas
+
+Una alerta indica un evento relevante:
+
+- `INFO`: evento informativo.
+- `WARNING`: riesgo medio o inconsistencia.
+- `CRITICAL`: evento critico.
+- `EMERGENCY`: IP peligrosa o evento prioritario.
+
+La pestana permite:
+
+- Recargar alertas.
+- Limpiar vista.
+- Marcar como revisada.
+- Consultar WHOIS nuevamente.
+- Generar alerta de equipo no autorizado.
+- Generar alerta de IP peligrosa.
+
+El detalle muestra IP origen, MAC origen, IP destino, severidad, estado, mensaje y datos WHOIS si existen.
+
+## Threat Intelligence
+
+La blacklist local se guarda en `data/blacklist_ips.json`. Una IP peligrosa representa infraestructura asociada a botnet, malware u otra actividad sospechosa.
+
+Para agregar una IP:
+
+1. Abra Threat Intelligence.
+2. Escriba IP.
+3. Escriba tipo de riesgo, por ejemplo Botnet o Malware.
+4. Seleccione severidad.
+5. Escriba fuente.
+6. Escriba descripcion.
+7. Pulse Agregar IP.
+
+Tambien puede editar, eliminar, recargar, probar IP, consultar WHOIS y generar una alerta EMERGENCY de prueba.
+
+## Automatizacion forense
+
+WHOIS ayuda a obtener datos publicos de una IP:
+
+- ASN.
+- Pais.
+- Proveedor u organizacion.
+- Abuse Contact.
+
+Si no hay internet, `whois` no esta instalado o el servidor no devuelve datos, la aplicacion no se cierra. Guarda un resultado controlado en `logs/forensic_log.csv`.
+
+Instalacion de WHOIS:
+
+```bash
+sudo apt install whois
 ```
 
-### Correo SMTP
+## Configuracion
 
-```text
-Alerta generada
-   |
-   v
-SMTP_ENABLED?
-   |
-   +-- false -> Correo: Simulado
-   |
-   +-- true -> Leer .env -> STARTTLS -> login -> enviar
+La pestana Configuracion permite editar:
+
+- Correo administrador.
+- SMTP habilitado o simulado.
+- STARTTLS.
+- Host SMTP.
+- Puerto SMTP.
+- Usuario SMTP.
+- Password SMTP.
+- Remitente.
+- Cooldown de alertas.
+- Interfaz de captura.
+
+Tambien permite crear `.env` desde plantilla y probar correo. En modo simulado, la prueba no envia correo real.
+
+## Archivos generados
+
+- `whitelist.json`: equipos autorizados.
+- `blacklist_ips.json`: IPs peligrosas.
+- `settings.json`: preferencias no sensibles.
+- `traffic_log.csv`: consultas DNS.
+- `alerts_log.csv`: alertas.
+- `forensic_log.csv`: resultados WHOIS.
+- `system_events.csv`: eventos tecnicos y errores controlados.
+
+## Modo demo para exposicion
+
+1. Abra la aplicacion con `python main.py`.
+2. Muestre Dashboard.
+3. Agregue un equipo en Lista Blanca.
+4. Genere evento DNS simulado.
+5. Genere alerta de equipo no autorizado.
+6. Genere alerta de IP peligrosa.
+7. Consulte WHOIS desde Alertas o Threat Intelligence.
+8. Muestre los CSV en `logs/`.
+9. Abra Configuracion y muestre SMTP simulado.
+10. Muestre `.env.example` sin contrasenas reales.
+
+## Troubleshooting
+
+Error: La aplicacion no abre.  
+Causa posible: PyQt6 no esta instalado o el entorno virtual no esta activo.  
+Solucion:
+
+```bash
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py
 ```
 
-## 13. Recomendaciones para presentacion presencial
+Error: No se puede capturar trafico.  
+Causa posible: permisos insuficientes.  
+Solucion:
 
-1. Abra con `python main.py` para mostrar interfaz sin permisos.
-2. Explique Dashboard.
-3. Muestre Lista Blanca.
-4. Use `Generar evento de prueba` en Trafico DNS/Sitios.
-5. Use `Generar alerta equipo no autorizado`.
-6. Use `Generar alerta IP peligrosa`.
-7. Muestre WHOIS en Alertas o Threat Intelligence.
-8. Muestre CSV en `logs/`.
-9. Muestre `.env.example`, no `.env`.
-10. Si quiere captura real, cierre y abra con `sudo venv/bin/python main.py`.
+```bash
+sudo venv/bin/python main.py
+```
 
-## 14. Solucion de problemas
+Error: No aparece trafico DNS.  
+Causas posibles: interfaz incorrecta, no hay trafico, DNS over HTTPS activo o VM sin modo puente.  
+Solucion:
 
-| Problema | Que revisar |
-| --- | --- |
-| La app no abre | Ejecutar desde carpeta `ids-institucional`; revisar PyQt6 en venv. |
-| Scapy no captura | Ejecutar con `sudo venv/bin/python main.py`. |
-| Dice Scapy no instalado | Usar `venv/bin/python`; no instalar `scrapy`. |
-| No aparecen DNS | Revisar interfaz, DoH, cache DNS o trafico insuficiente. |
-| Muchas alertas | Aumentar cooldown y completar whitelist. |
-| WHOIS falla | Instalar `whois` y revisar conexion. |
-| Correo no llega | Revisar SMTP, spam, credenciales y STARTTLS. |
-| JSON corrupto | La app genera `.bak` y repara estructura. |
-| CSV no se actualiza | Revisar permisos de escritura en `logs/`. |
+```bash
+ip link show
+nslookup debian.org
+```
 
-## 15. Buenas practicas
+Cambie interfaz en Configuracion o en Trafico DNS/Sitios.
 
-- Usar nombres claros para equipos autorizados.
-- Mantener whitelist actualizada.
-- Agregar a blacklist solo IPs justificadas.
-- No monitorear redes ajenas.
-- No publicar `.env`.
-- Revisar logs despues de cada demo.
-- Configurar cooldown antes de captura real.
-- Explicar que DNS no muestra URL completa HTTPS.
+Error: El correo no llega.  
+Causas posibles: `SMTP_ENABLED=false`, credenciales incorrectas, Microsoft 365 bloquea SMTP, SMTP AUTH deshabilitado o correo en spam.  
+Solucion: revise `.env`, active `SMTP_ENABLED=true` solo con credenciales reales, confirme SMTP AUTH y revise spam.
+
+Error: WHOIS no funciona.  
+Solucion:
+
+```bash
+sudo apt install whois
+```
+
+Error: JSON corrupto.  
+Solucion: revise el archivo en `data/`, busque respaldo `.bak` y reinicie la aplicacion.
+
+Error: CSV no se actualiza.  
+Solucion: revise permisos de `logs/`, ejecute desde la carpeta del proyecto y confirme que el archivo no este abierto con bloqueo externo.
+
+Error: No se guardan cambios.  
+Solucion: verifique permisos de escritura en `data/` y que no se este ejecutando desde una copia distinta.
+
+Error: No se ven alertas.  
+Solucion: genere una alerta demo, revise cooldown y confirme `logs/alerts_log.csv`.
+
+Error: App se cierra inesperadamente.  
+Solucion: ejecutela desde terminal y revise `logs/system_events.csv`.
+
+## Buenas practicas
+
+- Usar solo en redes autorizadas.
+- No compartir `.env`.
+- No compartir logs fuera del contexto academico.
+- No autorizar equipos desconocidos sin verificar.
+- Revisar alertas criticas y de emergencia.
+- Mantener respaldos de `data/` y `logs/`.
+- Detener monitoreo antes de cerrar si esta activo.
+
+## Cierre
+
+IDS Institucional esta disenado para monitoreo defensivo academico. Su valor principal es mostrar un flujo completo: autorizacion IP/MAC, DNS, alertas, evidencias CSV, WHOIS y SMTP configurable sin credenciales hardcodeadas.

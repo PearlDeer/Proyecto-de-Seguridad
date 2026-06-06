@@ -10,6 +10,7 @@ TRAFFIC_HEADERS = ["date", "time", "src_ip", "src_mac", "domain", "protocol", "e
 ALERT_HEADERS = ["date", "time", "severity", "src_ip", "src_mac", "dst_ip", "risk_type", "message", "status"]
 FORENSIC_HEADERS = ["date", "time", "ip", "asn", "country", "abuse_contact", "provider", "raw_summary"]
 SYSTEM_EVENT_HEADERS = ["date", "time", "event_type", "module", "message"]
+ADMIN_EMAIL_DEFAULT = "al281268@edu.uaa.mx"
 
 
 def now_parts() -> tuple[str, str]:
@@ -17,7 +18,7 @@ def now_parts() -> tuple[str, str]:
     return current.strftime("%Y-%m-%d"), current.strftime("%H:%M:%S")
 
 
-def read_json(path: Path, default: Any) -> Any:
+def read_json(path: Path, default: Any, module: str = "CONFIG") -> Any:
     try:
         if not path.exists() or path.stat().st_size == 0:
             write_json(path, default)
@@ -25,15 +26,25 @@ def read_json(path: Path, default: Any) -> Any:
         with path.open("r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError:
-        backup_path = path.with_suffix(f"{path.suffix}.bak")
+        backup_path = _backup_path(path)
         try:
             shutil.copy2(path, backup_path)
         except OSError:
             pass
         write_json(path, default)
+        _log_bootstrap_system_event(
+            path,
+            "JSON_CORRUPT",
+            module,
+            f"JSON corrupto regenerado: {path.name}. Respaldo: {backup_path.name}",
+        )
         return default
-    except OSError:
-        write_json(path, default)
+    except OSError as exc:
+        try:
+            write_json(path, default)
+        except OSError:
+            pass
+        _log_bootstrap_system_event(path, "JSON_ERROR", module, f"No se pudo leer {path.name}: {exc}")
         return default
 
 
@@ -46,18 +57,50 @@ def write_json(path: Path, payload: Any) -> None:
 
 def read_csv(path: Path, headers: list[str]) -> list[dict[str, str]]:
     ensure_csv(path, headers, [])
-    with path.open("r", encoding="utf-8", newline="") as file:
-        return list(csv.DictReader(file))
+    try:
+        with path.open("r", encoding="utf-8", newline="") as file:
+            return [
+                {header: row.get(header, "") for header in headers}
+                for row in csv.DictReader(file)
+                if not _is_duplicate_header_row(row, headers)
+            ]
+    except csv.Error as exc:
+        _log_bootstrap_system_event(path, "CSV_ERROR", "LOGS", f"No se pudo leer {path.name}: {exc}")
+        ensure_csv(path, headers, [])
+        return []
 
 
 def ensure_csv(path: Path, headers: list[str], rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() and path.stat().st_size > 0:
-        return
+        try:
+            with path.open("r", encoding="utf-8", newline="") as file:
+                reader = csv.reader(file)
+                current_header = next(reader, [])
+                existing_rows = [row for row in reader if row]
+            if current_header == headers:
+                cleaned = [row for row in existing_rows if row[: len(headers)] != headers]
+                if len(cleaned) != len(existing_rows):
+                    with path.open("w", encoding="utf-8", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerow(headers)
+                        writer.writerows(cleaned)
+                return
+            backup_path = _backup_path(path)
+            shutil.copy2(path, backup_path)
+            rows = [_row_from_list(current_header, row, headers) for row in existing_rows] or rows
+            _log_bootstrap_system_event(
+                path,
+                "CSV_HEADER_REPAIRED",
+                "LOGS",
+                f"Encabezado CSV reparado: {path.name}. Respaldo: {backup_path.name}",
+            )
+        except (OSError, csv.Error) as exc:
+            _log_bootstrap_system_event(path, "CSV_ERROR", "LOGS", f"No se pudo validar {path.name}: {exc}")
     with path.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows({header: row.get(header, "") for header in headers} for row in rows)
 
 
 def ensure_project_files(base_path: Path) -> None:
@@ -75,7 +118,7 @@ def ensure_project_files(base_path: Path) -> None:
                 "ip": "192.168.1.10",
                 "mac": "00:11:22:33:44:55",
                 "description": "Servidor autorizado de servicios internos",
-                "created_at": f"{date}T{time}",
+                "created_at": f"{date} {time}",
             },
             {
                 "id": 2,
@@ -83,9 +126,10 @@ def ensure_project_files(base_path: Path) -> None:
                 "ip": "192.168.1.25",
                 "mac": "AA:BB:CC:DD:EE:01",
                 "description": "Estacion de trabajo administrativa",
-                "created_at": f"{date}T{time}",
+                "created_at": f"{date} {time}",
             },
         ],
+        module="WHITELIST",
     )
     read_json(
         data_path / "blacklist_ips.json",
@@ -105,11 +149,12 @@ def ensure_project_files(base_path: Path) -> None:
                 "description": "Indicador reservado para validacion visual",
             },
         ],
+        module="THREAT_INTEL",
     )
     read_json(
         data_path / "settings.json",
         {
-            "admin_email": "seguridad@example.org",
+            "admin_email": ADMIN_EMAIL_DEFAULT,
             "capture_interface": "eth0",
             "monitoring_enabled": False,
             "dns_logging_enabled": True,
@@ -117,6 +162,7 @@ def ensure_project_files(base_path: Path) -> None:
             "smtp_enabled": False,
             "alert_cooldown_seconds": 300,
         },
+        module="SETTINGS",
     )
     ensure_csv(
         logs_path / "traffic_log.csv",
@@ -133,6 +179,52 @@ def ensure_project_files(base_path: Path) -> None:
             }
         ],
     )
+
+
+def _backup_path(path: Path) -> Path:
+    candidate = path.with_suffix(f"{path.suffix}.bak")
+    if not candidate.exists():
+        return candidate
+    stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    return path.with_suffix(f"{path.suffix}.{stamp}.bak")
+
+
+def _row_from_list(current_header: list[str], row: list[str], expected_headers: list[str]) -> dict[str, str]:
+    mapped = {key: row[index] if index < len(row) else "" for index, key in enumerate(current_header)}
+    return {header: mapped.get(header, "") for header in expected_headers}
+
+
+def _is_duplicate_header_row(row: dict[str, str], headers: list[str]) -> bool:
+    return all(row.get(header, "") == header for header in headers)
+
+
+def _log_bootstrap_system_event(source_path: Path, event_type: str, module: str, message: str) -> None:
+    try:
+        logs_path = source_path.parents[1] / "logs"
+    except IndexError:
+        logs_path = source_path.parent
+    path = logs_path / "system_events.csv"
+    if path.resolve() == source_path.resolve():
+        return
+    date, time = now_parts()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        exists = path.exists() and path.stat().st_size > 0
+        with path.open("a", encoding="utf-8", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=SYSTEM_EVENT_HEADERS)
+            if not exists:
+                writer.writeheader()
+            writer.writerow(
+                {
+                    "date": date,
+                    "time": time,
+                    "event_type": event_type,
+                    "module": module,
+                    "message": message,
+                }
+            )
+    except OSError:
+        pass
     ensure_csv(
         logs_path / "alerts_log.csv",
         ALERT_HEADERS,

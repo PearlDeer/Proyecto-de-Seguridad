@@ -46,7 +46,7 @@ class WhitelistTab(QWidget):
     def __init__(self, base_path: Path):
         super().__init__()
         self.manager = WhitelistManager(base_path)
-        self.selected_id: int | None = None
+        self.selected_id: str | None = None
 
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -217,7 +217,7 @@ class WhitelistTab(QWidget):
         if not items:
             return
         row = items[0].row()
-        self.selected_id = int(self.table.item(row, 0).text())
+        self.selected_id = self.table.item(row, 0).text()
         self.name_input.setText(self.table.item(row, 1).text())
         self.ip_input.setText(self.table.item(row, 2).text())
         self.mac_input.setText(self.table.item(row, 3).text())

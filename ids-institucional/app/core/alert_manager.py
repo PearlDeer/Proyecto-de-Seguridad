@@ -12,7 +12,7 @@ except ImportError:
 
 from app.core.log_manager import LogManager
 from app.core.forensic_lookup import ForensicLookupService
-from app.utils.config_loader import read_json
+from app.utils.config_loader import ADMIN_EMAIL_DEFAULT, read_json
 
 
 SEVERITIES = ["INFO", "WARNING", "CRITICAL", "EMERGENCY"]
@@ -146,7 +146,7 @@ class AlertManager:
             "host": os.getenv("SMTP_HOST", ""),
             "port": self._env_int("SMTP_PORT", 587),
             "user_configured": bool(os.getenv("SMTP_USER", "")),
-            "admin_email": os.getenv("ADMIN_EMAIL", settings.get("admin_email", "")),
+            "admin_email": os.getenv("ADMIN_EMAIL", settings.get("admin_email", ADMIN_EMAIL_DEFAULT)),
             "cooldown": self.cooldown_seconds(),
         }
 
@@ -191,7 +191,9 @@ class AlertManager:
         starttls = self._env_bool("SMTP_STARTTLS", True)
 
         if not host or not sender or not recipient:
-            return {"status": "Error", "message": "Configuracion SMTP incompleta"}
+            detail = "Configuracion SMTP incompleta"
+            self.log_manager.log_system_event("SMTP_ERROR", "ALERTS", detail)
+            return {"status": "Error", "message": detail}
 
         message = EmailMessage()
         message["Subject"] = subject
@@ -209,9 +211,13 @@ class AlertManager:
             self._touch_cooldown(f"MAIL:{cooldown_key}")
             return {"status": "Enviado", "message": "Correo enviado correctamente"}
         except smtplib.SMTPAuthenticationError as exc:
-            return {"status": "Error", "message": f"Error de autenticacion SMTP: {exc}"}
+            detail = f"Error de autenticacion SMTP: {exc}"
+            self.log_manager.log_system_event("SMTP_ERROR", "ALERTS", detail)
+            return {"status": "Error", "message": detail}
         except (smtplib.SMTPException, OSError) as exc:
-            return {"status": "Error", "message": f"Error de conexion SMTP: {exc}"}
+            detail = f"Error de conexion SMTP: {exc}"
+            self.log_manager.log_system_event("SMTP_ERROR", "ALERTS", detail)
+            return {"status": "Error", "message": detail}
 
     def _unauthorized_body(self, alert: dict[str, str]) -> str:
         return "\n".join(

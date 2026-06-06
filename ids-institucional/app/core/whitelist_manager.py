@@ -12,14 +12,14 @@ class WhitelistManager:
         self.log_manager = LogManager(base_path)
 
     def all_devices(self) -> list[dict]:
-        data = read_json(self.path, [])
+        data = read_json(self.path, [], module="WHITELIST")
         return data if isinstance(data, list) else []
 
     def _save_devices(self, devices: list[dict]) -> None:
-        ordered = sorted(devices, key=lambda item: int(item.get("id", 0)))
+        ordered = sorted(devices, key=lambda item: self._sort_key(item.get("id", "")))
         write_json(self.path, ordered)
 
-    def _validate_device(self, device_name: str, ip: str, mac: str, exclude_id: int | None = None) -> tuple[bool, str]:
+    def _validate_device(self, device_name: str, ip: str, mac: str, exclude_id: int | str | None = None) -> tuple[bool, str]:
         if not device_name.strip():
             return False, "Falta el nombre del equipo."
         if not is_valid_ip(ip):
@@ -30,8 +30,8 @@ class WhitelistManager:
         normalized_ip = normalize_ip(ip)
         normalized_mac = normalize_mac(mac)
         for device in self.all_devices():
-            current_id = int(device.get("id", 0))
-            if exclude_id is not None and current_id == exclude_id:
+            current_id = device.get("id", "")
+            if exclude_id is not None and str(current_id) == str(exclude_id):
                 continue
             if device.get("ip") == normalized_ip:
                 return False, "La IP ya existe."
@@ -45,28 +45,28 @@ class WhitelistManager:
             return False, message
 
         devices = self.all_devices()
-        next_id = max((int(item.get("id", 0)) for item in devices), default=0) + 1
+        next_id = max((self._numeric_id(item.get("id", 0)) for item in devices), default=0) + 1
         device = {
             "id": next_id,
             "device_name": device_name.strip(),
             "ip": normalize_ip(ip),
             "mac": normalize_mac(mac),
             "description": description.strip(),
-            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
         devices.append(device)
         self._save_devices(devices)
         self.log_manager.log_system_event("CREATE", "WHITELIST", f"Equipo autorizado agregado: {device['device_name']}")
         return True, "Equipo agregado correctamente."
 
-    def update_device(self, device_id: int, device_name: str, ip: str, mac: str, description: str = "") -> tuple[bool, str]:
+    def update_device(self, device_id: int | str, device_name: str, ip: str, mac: str, description: str = "") -> tuple[bool, str]:
         valid, message = self._validate_device(device_name, ip, mac, exclude_id=device_id)
         if not valid:
             return False, message
 
         devices = self.all_devices()
         for device in devices:
-            if int(device.get("id", 0)) == device_id:
+            if str(device.get("id", "")) == str(device_id):
                 device.update(
                     {
                         "device_name": device_name.strip(),
@@ -80,13 +80,13 @@ class WhitelistManager:
                 return True, "Equipo editado correctamente."
         return False, "No se encontro el equipo seleccionado."
 
-    def delete_device(self, device_id: int) -> tuple[bool, str]:
+    def delete_device(self, device_id: int | str) -> tuple[bool, str]:
         devices = self.all_devices()
-        removed = next((item for item in devices if int(item.get("id", 0)) == device_id), None)
+        removed = next((item for item in devices if str(item.get("id", "")) == str(device_id)), None)
         if removed is None:
             return False, "No se encontro el equipo seleccionado."
 
-        self._save_devices([item for item in devices if int(item.get("id", 0)) != device_id])
+        self._save_devices([item for item in devices if str(item.get("id", "")) != str(device_id)])
         self.log_manager.log_system_event("DELETE", "WHITELIST", f"Equipo autorizado eliminado: {removed.get('device_name', 'Sin nombre')}")
         return True, "Equipo eliminado correctamente."
 
@@ -109,3 +109,13 @@ class WhitelistManager:
         if mac_match:
             return {"authorized": False, "reason": "UNKNOWN_IP", "device": mac_match}
         return {"authorized": False, "reason": "UNKNOWN_DEVICE", "device": None}
+
+    def _numeric_id(self, value) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+    def _sort_key(self, value) -> tuple[int, str]:
+        number = self._numeric_id(value)
+        return (0, f"{number:010d}") if number else (1, str(value))

@@ -19,3 +19,7 @@ def is_valid_mac(value: str) -> bool:
 
 def normalize_mac(value: str) -> str:
     return value.strip().replace("-", ":").upper()
+
+
+def normalize_ip(value: str) -> str:
+    return str(ipaddress.ip_address(value.strip()))

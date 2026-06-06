@@ -1,0 +1,6 @@
+date,time,event_type,module,message
+2026-06-05,18:33:00,INIT,WHITELIST,Modulo de lista blanca preparado para administracion IP/MAC.
+2026-06-05,18:00:05,ERROR,FORENSIC,WHOIS fallo: [Errno 2] No such file or directory: 'whois'
+2026-06-05,18:23:24,ERROR,FORENSIC,"WHOIS fallo: Command '['whois', '185.220.101.45']' returned non-zero exit status 2."
+2026-06-05,18:23:24,ERROR,FORENSIC,"WHOIS fallo: Command '['whois', '185.220.101.45']' returned non-zero exit status 2."
+2026-06-05,18:55:45,CREATE,WHITELIST,Equipo autorizado agregado: Martin Romo

@@ -1,3 +1,51 @@
 date,time,severity,src_ip,src_mac,dst_ip,risk_type,message,status
-2026-06-05,09:15:00,Critica,192.168.1.90,DE:AD:BE:EF:00:10,185.220.101.45,IP en blacklist,Conexion simulada hacia IP peligrosa,Nueva
-2026-06-05,09:17:30,Media,192.168.1.41,AA:BB:CC:00:00:41,203.0.113.66,Scanner remoto,Intento simulado de conexion con indicador de riesgo,En revision
+2026-06-05,09:15:00,EMERGENCY,192.168.1.90,DE:AD:BE:EF:00:10,185.220.101.45,IP en blacklist,Conexion simulada hacia IP peligrosa,Nueva
+2026-06-05,09:17:30,WARNING,192.168.1.41,AA:BB:CC:00:00:41,203.0.113.66,Scanner remoto,Intento simulado de conexion con indicador de riesgo,En revision
+2026-06-05,17:49:39,CRITICAL,192.168.1.200,DE:AD:BE:EF:00:02,8.8.8.8,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,17:49:39,EMERGENCY,192.168.1.25,AA:BB:CC:DD:EE:01,185.220.101.45,Botnet,IP peligrosa detectada: 185.220.101.45 | Fuente: Local Threat Feed | Descripcion: IP asociada a actividad maliciosa o infraestructura sospechosa,Nueva | Correo: Simulado
+2026-06-05,18:00:05,EMERGENCY,192.168.1.25,AA:BB:CC:DD:EE:01,185.220.101.45,Botnet,IP peligrosa detectada: 185.220.101.45 | Severidad feed: EMERGENCY | Fuente: Local Threat Feed | Descripcion: IP asociada a actividad maliciosa o infraestructura sospechosa,Nueva | Correo: Simulado
+2026-06-05,18:23:24,CRITICAL,192.168.1.200,DE:AD:BE:EF:00:02,8.8.8.8,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Revisada
+2026-06-05,18:23:24,EMERGENCY,192.168.1.25,AA:BB:CC:DD:EE:01,185.220.101.45,Botnet,IP peligrosa detectada: 185.220.101.45 | Severidad feed: EMERGENCY | Fuente: Local Threat Feed | Descripcion: IP asociada a actividad maliciosa o infraestructura sospechosa,Nueva | Correo: Simulado
+2026-06-05,18:23:24,CRITICAL,192.168.1.200,DE:AD:BE:EF:00:02,8.8.8.8,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:23:24,EMERGENCY,192.168.1.25,AA:BB:CC:DD:EE:01,185.220.101.45,Botnet,IP peligrosa detectada: 185.220.101.45 | Severidad feed: EMERGENCY | Fuente: Local Threat Feed | Descripcion: IP asociada a actividad maliciosa o infraestructura sospechosa,Nueva | Correo: Simulado
+2026-06-05,18:26:13,CRITICAL,192.168.1.200,DE:AD:BE:EF:00:02,8.8.8.8,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:26:21,CRITICAL,192.168.1.200,DE:AD:BE:EF:00:02,8.8.8.8,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:26:29,EMERGENCY,192.168.1.25,AA:BB:CC:DD:EE:01,185.220.101.45,Botnet,IP peligrosa detectada: 185.220.101.45 | Severidad feed: EMERGENCY | Fuente: Local Threat Feed | Descripcion: IP asociada a actividad maliciosa o infraestructura sospechosa,Nueva | Correo: Simulado
+2026-06-05,18:27:33,CRITICAL,172.64.148.235,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:27:34,CRITICAL,192.168.0.9,BC:03:58:DF:C2:0D,172.64.148.235,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:27:37,CRITICAL,172.64.155.209,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:27:37,CRITICAL,104.18.39.21,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:27:46,CRITICAL,140.82.112.22,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:33,CRITICAL,172.64.148.235,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:33,CRITICAL,192.168.0.9,BC:03:58:DF:C2:0D,172.64.148.235,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:37,CRITICAL,104.18.39.21,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:48,CRITICAL,172.64.155.209,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:52,CRITICAL,20.184.175.7,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:28:56,CRITICAL,192.168.0.7,6A:FC:70:13:0C:B1,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:29:26,CRITICAL,140.82.112.25,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:29:30,CRITICAL,10.10.16.16,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:29:30,CRITICAL,150.171.110.178,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:38:46,CRITICAL,127.0.0.1,00:00:00:00:00:00,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:44,CRITICAL,192.168.0.9,BC:03:58:DF:C2:0D,13.70.79.200,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:46,CRITICAL,192.168.0.8,E2:16:CD:AB:BD:87,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:49,CRITICAL,192.168.0.2,38:E7:C0:A8:FC:68,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:49,CRITICAL,192.168.0.7,6A:FC:70:13:0C:B1,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:54,CRITICAL,104.18.39.21,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:50:59,CRITICAL,172.64.155.209,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:51:02,CRITICAL,150.171.110.4,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:51:14,CRITICAL,13.70.79.200,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:51:28,CRITICAL,140.82.113.26,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:51:32,CRITICAL,172.64.148.235,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:52:24,CRITICAL,10.10.16.16,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:52:32,CRITICAL,192.168.0.1,90:9D:7D:75:62:D4,224.0.0.1,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:52:57,CRITICAL,104.18.39.21,90:9D:7D:75:62:D2,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:54:16,CRITICAL,199.232.157.91,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:54:24,CRITICAL,192.168.0.5,2A:08:CC:01:AB:23,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:54:32,CRITICAL,13.107.253.57,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:54:41,CRITICAL,0.0.0.0,38:E7:C0:A8:FC:68,255.255.255.255,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:54:54,CRITICAL,34.107.243.93,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:55:54,CRITICAL,104.18.39.21,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:56:02,CRITICAL,172.64.155.209,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:56:25,CRITICAL,192.168.0.2,38:E7:C0:A8:FC:68,224.0.0.251,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:56:28,CRITICAL,140.82.113.26,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado
+2026-06-05,18:56:58,CRITICAL,172.64.148.235,90:9D:7D:75:62:D4,192.168.0.9,UNKNOWN_DEVICE,Equipo no autorizado detectado en la red,Nueva | Correo: Simulado

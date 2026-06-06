@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.base_path = base_path
         self.setWindowTitle("IDS Institucional")
-        self.resize(1280, 820)
+        self.resize(1440, 900)
         self.setMinimumSize(1100, 700)
 
         settings = read_json(base_path / "data" / "settings.json", {})
@@ -62,23 +62,34 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName("Muted")
         title_block.addWidget(title)
         title_block.addWidget(subtitle)
-        status = QLabel("Sistema activo" if monitoring else "Captura inactiva")
-        status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        status.setStyleSheet(f"background: {'#244f3f' if monitoring else '#4a3e23'}; border-radius: 14px; padding: 7px 14px; font-weight: 700;")
+        self.header_status = QLabel("Sistema activo" if monitoring else "Captura inactiva")
+        self.header_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.header_status.setStyleSheet(f"background: {'#244f3f' if monitoring else '#4a3e23'}; border-radius: 14px; padding: 7px 14px; font-weight: 700;")
         header_layout.addLayout(title_block)
         header_layout.addStretch()
-        header_layout.addWidget(status)
+        header_layout.addWidget(self.header_status)
         content_layout.addWidget(header)
 
         self.stack = QStackedWidget()
+        self.dashboard_page = DashboardTab(base_path)
+        self.traffic_page = TrafficTab(base_path)
+        self.alerts_page = AlertsTab(base_path)
+        self.threat_page = ThreatTab(base_path)
         self.pages = [
-            ("Dashboard", DashboardTab(base_path)),
+            ("Dashboard", self.dashboard_page),
             ("Lista Blanca", WhitelistTab(base_path)),
-            ("Trafico DNS/Sitios", TrafficTab(base_path)),
-            ("Alertas", AlertsTab(base_path)),
-            ("Threat Intelligence", ThreatTab(base_path)),
+            ("Trafico DNS/Sitios", self.traffic_page),
+            ("Alertas", self.alerts_page),
+            ("Threat Intelligence", self.threat_page),
             ("Configuracion", SettingsTab(base_path)),
         ]
+        self.traffic_page.dns_event_logged.connect(self.dashboard_page.add_dns_event)
+        self.traffic_page.security_alert_logged.connect(self.alerts_page.add_live_alert)
+        self.traffic_page.security_alert_logged.connect(self.dashboard_page.add_alert_event)
+        self.alerts_page.alert_created.connect(self.dashboard_page.add_alert_event)
+        self.threat_page.alert_created.connect(self.alerts_page.add_live_alert)
+        self.threat_page.alert_created.connect(self.dashboard_page.add_alert_event)
+        self.traffic_page.monitoring_status_changed.connect(self.update_monitoring_status)
 
         self.nav_buttons: list[QPushButton] = []
         for index, (label, page) in enumerate(self.pages):
@@ -90,10 +101,6 @@ class MainWindow(QMainWindow):
             self.nav_buttons.append(button)
             self.stack.addWidget(page)
         sidebar_layout.addStretch()
-        footer = QLabel("Fase 1 | Base visual y datos locales")
-        footer.setObjectName("Muted")
-        footer.setWordWrap(True)
-        sidebar_layout.addWidget(footer)
 
         content_layout.addWidget(self.stack)
         root_layout.addWidget(sidebar)
@@ -105,3 +112,24 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(index)
         for current, button in enumerate(self.nav_buttons):
             button.setChecked(current == index)
+        current_page = self.stack.currentWidget()
+        if hasattr(current_page, "refresh"):
+            current_page.refresh()
+
+    def update_monitoring_status(self, status: str, interface: str) -> None:
+        self.dashboard_page.set_monitoring_status(status, interface)
+        if status == "Monitoreando":
+            text = "Sistema activo"
+            color = "#244f3f"
+        elif status == "Error":
+            text = "Error de captura"
+            color = "#5a2626"
+        else:
+            text = "Captura inactiva"
+            color = "#4a3e23"
+        self.header_status.setText(text)
+        self.header_status.setStyleSheet(f"background: {color}; border-radius: 14px; padding: 7px 14px; font-weight: 700;")
+
+    def closeEvent(self, event) -> None:
+        self.traffic_page.stop_monitoring()
+        super().closeEvent(event)

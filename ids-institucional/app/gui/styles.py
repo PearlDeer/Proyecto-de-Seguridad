@@ -14,6 +14,9 @@ QFrame#Header, QFrame#Card, QFrame#Panel {
     border: 1px solid #3a424d;
     border-radius: 8px;
 }
+QFrame#Card {
+    padding: 4px;
+}
 QLabel#Title {
     font-size: 22px;
     font-weight: 700;
@@ -31,6 +34,7 @@ QPushButton {
     border-radius: 6px;
     padding: 8px 12px;
     color: #f4f6f8;
+    min-height: 18px;
 }
 QPushButton:hover {
     background: #405169;
@@ -46,7 +50,7 @@ QPushButton#NavButton:checked {
     background: #334155;
     border-left: 4px solid #3fb27f;
 }
-QLineEdit, QTextEdit, QComboBox {
+QLineEdit, QTextEdit, QComboBox, QSpinBox {
     background: #1d2229;
     border: 1px solid #46505d;
     border-radius: 6px;
@@ -56,6 +60,9 @@ QLineEdit, QTextEdit, QComboBox {
 QLineEdit[invalid="true"] {
     border: 1px solid #dc5b5b;
 }
+QTextEdit[invalid="true"] {
+    border: 1px solid #dc5b5b;
+}
 QTableWidget {
     background: #1f252d;
     alternate-background-color: #252c35;
@@ -63,6 +70,7 @@ QTableWidget {
     border: 1px solid #3a424d;
     border-radius: 6px;
     selection-background-color: #3f536a;
+    selection-color: #ffffff;
 }
 QHeaderView::section {
     background: #313946;
@@ -70,6 +78,12 @@ QHeaderView::section {
     border: 0;
     padding: 8px;
     font-weight: 600;
+}
+QSplitter::handle {
+    background: #303640;
+}
+QCheckBox {
+    spacing: 8px;
 }
 """
 

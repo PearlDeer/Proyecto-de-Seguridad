@@ -14,5 +14,13 @@
     "mac": "AA:BB:CC:DD:EE:01",
     "description": "Estacion de trabajo administrativa",
     "created_at": "2026-06-05T09:05:00"
+  },
+  {
+    "id": 3,
+    "device_name": "Martin Romo",
+    "ip": "192.168.0.9",
+    "mac": "BC:03:58:DF:C2:0D",
+    "description": "Computador de MR",
+    "created_at": "2026-06-05T18:55:45"
   }
 ]

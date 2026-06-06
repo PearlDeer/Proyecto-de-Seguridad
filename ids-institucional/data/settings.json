@@ -1,7 +1,9 @@
 {
-  "admin_email": "seguridad@example.org",
-  "capture_interface": "eth0",
+  "admin_email": "al281268@edu.uaa.mx",
+  "capture_interface": "wlp0s20f3",
   "monitoring_enabled": false,
   "dns_logging_enabled": true,
-  "threat_intel_enabled": true
+  "threat_intel_enabled": true,
+  "smtp_enabled": false,
+  "alert_cooldown_seconds": 300
 }

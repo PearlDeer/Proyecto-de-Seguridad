@@ -1,15 +1,15 @@
 [
   {
     "ip": "185.220.101.45",
-    "risk_type": "Nodo TOR",
-    "severity": "Alta",
+    "risk_type": "Botnet",
+    "severity": "EMERGENCY",
     "source": "Lista local de ejemplo",
     "description": "IP marcada para pruebas de correlacion defensiva"
   },
   {
     "ip": "203.0.113.66",
-    "risk_type": "Scanner",
-    "severity": "Media",
+    "risk_type": "Malware",
+    "severity": "CRITICAL",
     "source": "Threat feed simulado",
     "description": "Indicador reservado para validacion visual"
   }
